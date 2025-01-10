@@ -1,23 +1,43 @@
-document.getElementById('parseButton').addEventListener('click', async () => {
-  const inputString = document.getElementById('inputString').value;
+document.getElementById('parse-button').addEventListener('click', parseInput);
+document.getElementById('clear-button').addEventListener('click', clearFields);
 
-  try {
-    const response = await fetch('http://127.0.0.1:5000/parse', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ string: inputString }),
-    });
+function displayMessage(message) {
+    const outputDiv = document.getElementById('output');
+    outputDiv.textContent = message;
+}
 
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
+async function parseInput() {
+    const inputText = document.getElementById('inputText').value;
+
+    if (!inputText.trim()) {
+        alert('Input is empty!');
+        return;
     }
 
-    const result = await response.json();
-    document.getElementById('result').textContent = JSON.stringify(result, null, 2);
-  } catch (error) {
-    console.error('Error:', error);
-    document.getElementById('result').textContent = `Error: ${error.message}`;
-  }
-});
+    displayMessage('Loading...');
+
+    try {
+        const response = await fetch('/parse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ input: inputText }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            displayMessage(`Error: ${errorData.error || 'Unknown error'}`);
+            return;
+        }
+
+        const parsedData = await response.json();
+        displayMessage(JSON.stringify(parsedData || {}, null, 2));
+    } catch (error) {
+        console.error('Error parsing input:', error);
+        displayMessage('An error occurred!');
+    }
+}
+
+function clearFields() {
+    document.getElementById('inputText').value = '';
+    displayMessage('');
+}

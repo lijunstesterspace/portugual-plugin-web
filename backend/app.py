@@ -71,13 +71,12 @@ def parse_string(input_str):
     return result
 
 
-@app.route('/parse', methods=['POST'])
+@app.route("/parse", methods=["POST"])
 def parse():
-    input_data = request.json.get('input', '')
-    if not input_data.strip():
-        return jsonify({'error': 'Input is empty!'}), 400
-    parsed_result = parse_string(input_data)
-    return jsonify(parsed_result)
+    data = request.json
+    input_str = data.get("input", "")
+    parsed_result = parse_string(input_str)
+    return jsonify({"parsed_result": parsed_result})
 
 
 if __name__ == '__main__':

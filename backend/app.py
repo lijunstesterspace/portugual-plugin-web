@@ -71,12 +71,16 @@ def parse_string(input_str):
     return result
 
 
-@app.route("/parse", methods=["POST"])
+@app.route('/parse', methods=['GET', 'POST'])
 def parse():
+    if request.method == 'GET':
+        return "This endpoint supports POST requests. Please send a POST request with data to parse.", 200
+
+    # Handle POST requests
     data = request.json
-    input_str = data.get("input", "")
-    parsed_result = parse_string(input_str)
-    return jsonify({"parsed_result": parsed_result})
+    # Your parsing logic here
+    return jsonify({"message": "Parsed successfully", "data": data})
+
 
 
 if __name__ == '__main__':

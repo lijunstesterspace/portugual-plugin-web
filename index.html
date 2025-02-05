@@ -10,19 +10,28 @@
     <h1>Parsing Tool</h1>
     <textarea id="inputText" rows="5" placeholder="Enter string to parse..."></textarea>
     <button id="parse-button">Parse</button>
-    <button onclick="clearFields()">Clear</button>
+    <button id="clear-button">Clear</button>
     <h2>Parsed Results:</h2>
     <div id="output" class="output"></div>
 
     <script>
+        document.getElementById('parse-button').addEventListener('click', parseInput);
+        document.getElementById('clear-button').addEventListener('click', clearFields);
+
+        function displayMessage(message) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.textContent = message;
+        }
+
         async function parseInput() {
             const inputText = document.getElementById('inputText').value;
-            const outputDiv = document.getElementById('output');
 
             if (!inputText.trim()) {
                 alert('Input is empty!');
                 return;
             }
+
+            displayMessage('Loading...');
 
             try {
                 const response = await fetch('/parse', {
@@ -33,21 +42,21 @@
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    outputDiv.textContent = `Error: ${errorData.error}`;
+                    displayMessage(`Error: ${errorData.error || 'Unknown error'}`);
                     return;
                 }
 
                 const parsedData = await response.json();
-                outputDiv.textContent = JSON.stringify(parsedData, null, 2);
+                displayMessage(JSON.stringify(parsedData || {}, null, 2));
             } catch (error) {
                 console.error('Error parsing input:', error);
-                outputDiv.textContent = 'An error occurred!';
+                displayMessage('An error occurred!');
             }
         }
 
         function clearFields() {
             document.getElementById('inputText').value = '';
-            document.getElementById('output').textContent = '';
+            displayMessage('');
         }
     </script>
 </body>

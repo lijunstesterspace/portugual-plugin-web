@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parsing Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Parsing Tool</h1>
+    <textarea id="inputText" rows="5" placeholder="Enter string to parse..."></textarea>
+    <button id="parse-button">Parse</button>
+    <button onclick="clearFields()">Clear</button>
+    <h2>Parsed Results:</h2>
+    <div id="output" class="output"></div>
+
+    <script>
+        async function parseInput() {
+            const inputText = document.getElementById('inputText').value;
+            const outputDiv = document.getElementById('output');
+
+            if (!inputText.trim()) {
+                alert('Input is empty!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: inputText }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    outputDiv.textContent = `Error: ${errorData.error}`;
+                    return;
+                }
+
+                const parsedData = await response.json();
+                outputDiv.textContent = JSON.stringify(parsedData, null, 2);
+            } catch (error) {
+                console.error('Error parsing input:', error);
+                outputDiv.textContent = 'An error occurred!';
+            }
+        }
+
+        function clearFields() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('output').textContent = '';
+        }
+    </script>
+</body>
+</html>

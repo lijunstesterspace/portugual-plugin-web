@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Mapping Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .game-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .game-card {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            width: 200px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .game-card:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .game-card.selected {
+            background-color: #e0f0ff;
+            border-color: #007bff;
+        }
+        
+        .mapping-editor {
+            margin-top: 20px;
+        }
+        
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .mapping-table th, .mapping-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .mapping-table th {
+            background-color: #f4f4f9;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+        }
+        
+        .add-row-button {
+            margin-bottom: 20px;
+        }
+        
+        .delete-button {
+            background-color: #dc3545;
+        }
+        
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+        
+        .new-game-form {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Letter Mapping Admin</h1>
+    <div class="admin-container">
+        <h2>游戏列表</h2>
+        <div id="game-list" class="game-list">
+            <!-- 游戏列表将通过JavaScript动态加载 -->
+            <div class="game-card loading">加载中...</div>
+        </div>
+        
+        <div id="mapping-editor" class="mapping-editor" style="display: none;">
+            <h2>编辑 <span id="current-game-name"></span> 的字母映射</h2>
+            
+            <div class="form-group">
+                <label for="game-id">游戏ID:</label>
+                <input type="text" id="game-id" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="game-name">游戏名称:</label>
+                <input type="text" id="game-name">
+            </div>
+            
+            <div class="form-group">
+                <label for="game-description">描述:</label>
+                <textarea id="game-description" rows="3"></textarea>
+            </div>
+            
+            <h3>字母映射配置</h3>
+            <button id="add-mapping" class="add-row-button">添加新映射</button>
+            
+            <table id="mapping-table" class="mapping-table">
+                <thead>
+                    <tr>
+                        <th>字母</th>
+                        <th>符号</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 映射表格将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+            
+            <div class="action-buttons">
+                <button id="save-button">保存更改</button>
+                <button id="delete-button" class="delete-button">删除游戏</button>
+                <button id="cancel-button">取消</button>
+            </div>
+        </div>
+        
+        <div class="new-game-form">
+            <h2>创建新游戏</h2>
+            <div class="form-group">
+                <label for="new-game-id">游戏ID:</label>
+                <input type="text" id="new-game-id" placeholder="例如: NewGame">
+            </div>
+            
+            <div class="form-group">
+                <label for="new-game-name">游戏名称:</label>
+                <input type="text" id="new-game-name" placeholder="例如: New Game">
+            </div>
+            
+            <div class="form-group">
+                <label for="new-game-description">描述:</label>
+                <textarea id="new-game-description" rows="3" placeholder="游戏描述..."></textarea>
+            </div>
+            
+            <button id="create-game-button">创建游戏</button>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let games = [];
+        let currentGame = null;
+        
+        // DOM元素
+        const gameListEl = document.getElementById('game-list');
+        const mappingEditorEl = document.getElementById('mapping-editor');
+        const currentGameNameEl = document.getElementById('current-game-name');
+        const gameIdEl = document.getElementById('game-id');
+        const gameNameEl = document.getElementById('game-name');
+        const gameDescriptionEl = document.getElementById('game-description');
+        const mappingTableEl = document.getElementById('mapping-table').querySelector('tbody');
+        const addMappingBtn = document.getElementById('add-mapping');
+        const saveBtn = document.getElementById('save-button');
+        const deleteBtn = document.getElementById('delete-button');
+        const cancelBtn = document.getElementById('cancel-button');
+        const createGameBtn = document.getElementById('create-game-button');
+        const newGameIdEl = document.getElementById('new-game-id');
+        const newGameNameEl = document.getElementById('new-game-name');
+        const newGameDescriptionEl = document.getElementById('new-game-description');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGames();
+            setupEventListeners();
+        });
+        
+        // 加载游戏列表
+        async function loadGames() {
+            try {
+                const response = await fetch('/games');
+                if (!response.ok) {
+                    throw new Error('Failed to load games');
+                }
+                
+                const data = await response.json();
+                games = data.data || [];
+                renderGameList();
+            } catch (error) {
+                console.error('Error loading games:', error);
+                gameListEl.innerHTML = `<div class="error">加载游戏失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 渲染游戏列表
+        function renderGameList() {
+            if (games.length === 0) {
+                gameListEl.innerHTML = '<div class="no-games">没有找到游戏配置</div>';
+                return;
+            }
+            
+            gameListEl.innerHTML = games.map(game => `
+                <div class="game-card" data-id="${game.game_id}">
+                    <h3>${game.game_name}</h3>
+                    <p>${game.description || '无描述'}</p>
+                </div>
+            `).join('');
+            
+            // 添加点击事件
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.addEventListener('click', () => loadGameDetails(card.dataset.id));
+            });
+        }
+        
+        // 加载游戏详情
+        async function loadGameDetails(gameId) {
+            try {
+                const response = await fetch(`/games/${gameId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load game details');
+                }
+                
+                const data = await response.json();
+                currentGame = data.data;
+                renderGameDetails();
+                
+                // 高亮选中的游戏
+                document.querySelectorAll('.game-card').forEach(card => {
+                    card.classList.toggle('selected', card.dataset.id === gameId);
+                });
+                
+                // 显示编辑器
+                mappingEditorEl.style.display = 'block';
+            } catch (error) {
+                console.error('Error loading game details:', error);
+                alert(`加载游戏详情失败: ${error.message}`);
+            }
+        }
+        
+        // 渲染游戏详情
+        function renderGameDetails() {
+            if (!currentGame) return;
+            
+            currentGameNameEl.textContent = currentGame.game_name;
+            gameIdEl.value = currentGame.game_id;
+            gameNameEl.value = currentGame.game_name;
+            gameDescriptionEl.value = currentGame.description || '';
+            
+            // 渲染映射表格
+            renderMappingTable();
+        }
+        
+        // 渲染映射表格
+        function renderMappingTable() {
+            const letterMapping = currentGame.letter_mapping || {};
+            
+            mappingTableEl.innerHTML = Object.entries(letterMapping).map(([letter, symbol]) => `
+                <tr>
+                    <td><input type="text" class="letter-input" value="${letter}" maxlength="1"></td>
+                    <td><input type="text" class="symbol-input" value="${symbol}"></td>
+                    <td><button class="remove-mapping">删除</button></td>
+                </tr>
+            `).join('');
+            
+            // 添加删除按钮事件
+            document.querySelectorAll('.remove-mapping').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.target.closest('tr').remove();
+                });
+            });
+        }
+        
+        // 添加新映射行
+        function addNewMappingRow() {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="letter-input" maxlength="1"></td>
+                <td><input type="text" class="symbol-input"></td>
+                <td><button class="remove-mapping">删除</button></td>
+            `;
+            
+            mappingTableEl.appendChild(newRow);
+            
+            // 添加删除按钮事件
+            newRow.querySelector('.remove-mapping').addEventListener('click', () => {
+                newRow.remove();
+            });
+            
+            // 聚焦到新行的第一个输入框
+            newRow.querySelector('.letter-input').focus();
+        }
+        
+        // 保存游戏配置
+        async function saveGameConfig() {
+            try {
+                // 收集表单数据
+                const gameId = gameIdEl.value;
+                const gameName = gameNameEl.value;
+                const gameDescription = gameDescriptionEl.value;
+                
+                if (!gameId || !gameName) {
+                    alert('游戏ID和名称不能为空');
+                    return;
+                }
+                
+                // 收集映射数据
+                const letterMapping = {};
+                const rows = mappingTableEl.querySelectorAll('tr');
+                
+                for (const row of rows) {
+                    const letterInput = row.querySelector('.letter-input');
+                    const symbolInput = row.querySelector('.symbol-input');
+                    
+                    if (letterInput && symbolInput) {
+                        const letter = letterInput.value.trim();
+                        const symbol = symbolInput.value.trim();
+                        
+                        if (letter && symbol) {
+                            letterMapping[letter] = symbol;
+                        }
+                    }
+                }
+                
+                // 构建游戏配置对象
+                const gameConfig = {
+                    game_id: gameId,
+                    game_name: gameName,
+                    description: gameDescription,
+                    letter_mapping: letterMapping
+                };
+                
+                // 发送更新请求
+                const response = await fetch(`/games/${gameId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(gameConfig)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '保存失败');
+                }
+                
+                alert('游戏配置保存成功');
+                await loadGames(); // 重新加载游戏列表
+            } catch (error) {
+                console.error('Error saving game config:', error);
+                alert(`保存失败: ${error.message}`);
+            }
+        }
+        
+        // 删除游戏
+        async function deleteGame() {
+            if (!currentGame) return;
+            
+            if (!confirm(`确定要删除游戏 "${currentGame.game_name}" 吗？此操作不可撤销。`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/games/${currentGame.game_id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '删除失败');
+                }
+                
+                alert('游戏已成功删除');
+                mappingEditorEl.style.display = 'none';
+                currentGame = null;
+                await loadGames(); // 重新加载游戏列表
+            } catch (error) {
+                console.error('Error deleting game:', error);
+                alert(`删除失败: ${error.message}`);
+            }
+        }
+        
+        // 创建新游戏
+        async function createNewGame() {
+            try {
+                const gameId = newGameIdEl.value.trim();
+                const gameName = newGameNameEl.value.trim();
+                const gameDescription = newGameDescriptionEl.value.trim();
+                
+                if (!gameId || !gameName) {
+                    alert('游戏ID和名称不能为空');
+                    return;
+                }
+                
+                // 构建游戏配置对象
+                const gameConfig = {
+                    game_id: gameId,
+                    game_name: gameName,
+                    description: gameDescription,
+                    letter_mapping: {
+                        'A': 'SYM0',
+                        'B': 'SYM1',
+                        'C': 'SYM2'
+                    }
+                };
+                
+                // 发送创建请求
+                const response = await fetch('/games', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(gameConfig)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '创建失败');
+                }
+                
+                alert('游戏创建成功');
+                
+                // 清空表单
+                newGameIdEl.value = '';
+                newGameNameEl.value = '';
+                newGameDescriptionEl.value = '';
+                
+                await loadGames(); // 重新加载游戏列表
+                
+                // 加载新创建的游戏详情
+                const data = await response.json();
+                if (data.data && data.data.game_id) {
+                    loadGameDetails(data.data.game_id);
+                }
+            } catch (error) {
+                console.error('Error creating game:', error);
+                alert(`创建失败: ${error.message}`);
+            }
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 添加新映射
+            addMappingBtn.addEventListener('click', addNewMappingRow);
+            
+            // 保存按钮
+            saveBtn.addEventListener('click', saveGameConfig);
+            
+            // 删除按钮
+            deleteBtn.addEventListener('click', deleteGame);
+            
+            // 取消按钮
+            cancelBtn.addEventListener('click', () => {
+                mappingEditorEl.style.display = 'none';
+                currentGame = null;
+                document.querySelectorAll('.game-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+            });
+            
+            // 创建游戏按钮
+            createGameBtn.addEventListener('click', createNewGame);
+        }
+    </script>
+</body>
+</html>

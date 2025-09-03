@@ -22,6 +22,124 @@
             const outputDiv = document.getElementById('output');
             outputDiv.textContent = message;
         }
+        
+        function displayParsedResults(data) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '';
+            
+            if (!data || !data.data || !Array.isArray(data.data)) {
+                outputDiv.textContent = 'No valid data to display';
+                return;
+            }
+            
+            // 创建总赢额显示
+            const totalWinAmount = data.data.reduce((total, spin) => {
+                const winAmounts = spin['WIN AMOUNT'] || [];
+                return total + winAmounts.reduce((sum, amount) => sum + parseFloat(amount || 0), 0);
+            }, 0);
+            
+            const totalWinDiv = document.createElement('div');
+            totalWinDiv.className = 'total-win';
+            totalWinDiv.innerHTML = `<h3>总赢额: ${totalWinAmount.toFixed(2)}</h3>`;
+            outputDiv.appendChild(totalWinDiv);
+            
+            // 创建结果容器
+            const resultsContainer = document.createElement('div');
+            resultsContainer.className = 'results-grid';
+            outputDiv.appendChild(resultsContainer);
+            
+            // 遍历每个SPIN并创建网格布局
+            data.data.forEach(spin => {
+                const spinCard = document.createElement('div');
+                spinCard.className = 'spin-card';
+                
+                // 添加SPIN标题
+                const spinHeader = document.createElement('div');
+                spinHeader.className = 'spin-header';
+                spinHeader.textContent = `SPIN ${spin.SPIN}`;
+                spinCard.appendChild(spinHeader);
+                
+                // 创建网格显示行数据
+                const rowsGrid = document.createElement('div');
+                rowsGrid.className = 'rows-grid';
+                
+                // 添加行数据
+                for (let i = 1; i <= 4; i++) {
+                    const rowKey = `Row ${i}`;
+                    if (spin[rowKey] && Array.isArray(spin[rowKey])) {
+                        const rowContainer = document.createElement('div');
+                        rowContainer.className = 'row-container';
+                        
+                        const rowLabel = document.createElement('div');
+                        rowLabel.className = 'row-label';
+                        rowLabel.textContent = rowKey + ':';
+                        rowContainer.appendChild(rowLabel);
+                        
+                        const rowData = document.createElement('div');
+                        rowData.className = 'row-data';
+                        
+                        spin[rowKey].forEach(symbol => {
+                            const symbolCell = document.createElement('div');
+                            symbolCell.className = 'symbol-cell';
+                            symbolCell.textContent = symbol;
+                            rowData.appendChild(symbolCell);
+                        });
+                        
+                        rowContainer.appendChild(rowData);
+                        rowsGrid.appendChild(rowContainer);
+                    }
+                }
+                
+                spinCard.appendChild(rowsGrid);
+                
+                // 添加其他信息
+                const infoSection = document.createElement('div');
+                infoSection.className = 'info-section';
+                
+                // 添加获胜符号信息
+                if (spin['WINNING SYM']) {
+                    const winningSymInfo = document.createElement('div');
+                    winningSymInfo.className = 'info-item';
+                    winningSymInfo.innerHTML = `<span class="info-label">获胜符号:</span> <span class="info-value">${spin['WINNING SYM']}</span>`;
+                    infoSection.appendChild(winningSymInfo);
+                }
+                
+                // 添加获胜位置信息
+                if (spin['WINNING SYM Position']) {
+                    const winningPosInfo = document.createElement('div');
+                    winningPosInfo.className = 'info-item';
+                    winningPosInfo.innerHTML = `<span class="info-label">获胜位置:</span> <span class="info-value">${spin['WINNING SYM Position']}</span>`;
+                    infoSection.appendChild(winningPosInfo);
+                }
+                
+                // 添加投注信息
+                if (spin['BET']) {
+                    const betInfo = document.createElement('div');
+                    betInfo.className = 'info-item';
+                    betInfo.innerHTML = `<span class="info-label">投注:</span> <span class="info-value">${spin['BET']}</span>`;
+                    infoSection.appendChild(betInfo);
+                }
+                
+                // 添加乘数信息
+                if (spin['MULTIPLIER']) {
+                    const multiplierInfo = document.createElement('div');
+                    multiplierInfo.className = 'info-item';
+                    multiplierInfo.innerHTML = `<span class="info-label">乘数:</span> <span class="info-value">${spin['MULTIPLIER']}</span>`;
+                    infoSection.appendChild(multiplierInfo);
+                }
+                
+                // 添加赢额信息
+                if (spin['WIN AMOUNT'] && spin['WIN AMOUNT'].length > 0) {
+                    const winAmountInfo = document.createElement('div');
+                    winAmountInfo.className = 'info-item win-amount';
+                    winAmountInfo.innerHTML = `<span class="info-label">赢额:</span> <span class="info-value">${spin['WIN AMOUNT'].join(', ')}</span>`;
+                    infoSection.appendChild(winAmountInfo);
+                }
+                
+                spinCard.appendChild(infoSection);
+                resultsContainer.appendChild(spinCard);
+            });
+        }
 
         async function parseInput() {
             const inputText = document.getElementById('inputText').value;
@@ -47,7 +165,7 @@
                 }
 
                 const parsedData = await response.json();
-                displayMessage(JSON.stringify(parsedData || {}, null, 2));
+                displayParsedResults(parsedData);
             } catch (error) {
                 console.error('Error parsing input:', error);
                 displayMessage('An error occurred!');

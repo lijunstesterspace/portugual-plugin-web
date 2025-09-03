@@ -1,0 +1,30 @@
+{
+  "game_name": "Mega Eagle Power Combo",
+  "game_id": "MegaEaglePowerCombo",
+  "description": "Mega Eagle Power Combo 游戏的字母映射配置",
+  "letter_mapping": {
+    "A": "SYM1",
+    "B": "SYM2",
+    "C": "SYM3",
+    "D": "SYM4",
+    "E": "SYM5",
+    "F": "SYM6",
+    "G": "SYM7",
+    "H": "SYM8",
+    "I": "SYM9",
+    "J": "SYM10",
+    "K": "SYM11",
+    "L": "SYM12",
+    "M": "SYM20",
+    "N": "SYM21",
+    "O": "SYM22",
+    "P": "SYM23",
+    "Q": "SYM24",
+    "R": "SYM25",
+    "S": "SYM26",
+    "T": "SYM27",
+    "U": "SYM28",
+    "V": "SYM29",
+    "W": "SYM30"
+  }
+}

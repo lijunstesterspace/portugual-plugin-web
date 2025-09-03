@@ -1,0 +1,26 @@
+{
+  "game_name": "Deco Diamonds Elite",
+  "game_id": "DecoDiamondsElite",
+  "description": "Deco Diamonds Elite 游戏的字母映射配置",
+  "letter_mapping": {
+    "A": "SYM2",
+    "B": "SYM3",
+    "C": "SYM4",
+    "D": "SYM5",
+    "E": "SYM6",
+    "F": "SYM7",
+    "G": "SYM8",
+    "H": "SYM9",
+    "I": "1X",
+    "J": "2X",
+    "K": "3X",
+    "L": "WILD",
+    "M": "SCATTER",
+    "N": "BONUS",
+    "O": "JACKPOT",
+    "P": "MINI",
+    "Q": "MINOR",
+    "R": "MAJOR",
+    "S": "MEGA"
+  }
+}

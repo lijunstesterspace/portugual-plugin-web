@@ -1,0 +1,26 @@
+{
+  "game_name": "Dark Water 2",
+  "game_id": "DarkWater2",
+  "description": "Dark Water 2 游戏的字母映射配置",
+  "letter_mapping": {
+    "A": "SYM0",
+    "B": "SYM1",
+    "C": "SYM2",
+    "D": "SYM3",
+    "E": "SYM4",
+    "F": "SYM5",
+    "G": "SYM6",
+    "H": "SYM7",
+    "I": "SYM8",
+    "J": "SYM9",
+    "K": "SYM10",
+    "L": "SYM11",
+    "M": "SYM12",
+    "N": "SYM32",
+    "O": "SYM33",
+    "P": "MINI",
+    "Q": "MINOR",
+    "R": "MAJOR",
+    "S": "MEGA"
+  }
+}
